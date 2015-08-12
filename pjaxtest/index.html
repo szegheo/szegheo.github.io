@@ -5,37 +5,75 @@
 	<script src="//cdnjs.cloudflare.com/ajax/libs/jquery.pjax/1.9.6/jquery.pjax.js"></script>	
 	<script type="text/javascript">
 		$(function(){
-			var onPanel;
+			var onModal;
 
 	        $.pjax.defaults.maxCacheLength = 0;
-	        $.pjax.defaults.timeout = 10000;
 
 			$(document).pjax('a[data-link=page]', '#pjax-pages');
-			$(document).pjax('a[data-link=panel]', '#pjax-panels');
+			$(document).pjax('a[data-link=modal]', '#pjax-modals');
+
+			$(document).on('pjax:start', function(e, xhr, options) {
+				console.log('PJAX:START EVENT');
+			});
 
 	        $(document).on('pjax:beforeSend', function(e, xhr, options) {
-	            if (onPanel) {
+	            if (onModal) {
 	            	e.preventDefault();
-	                $('#pjax-panels').empty();
-	                onPanel = false;	                
+	                $('#pjax-modals').empty();
+	                onModal = false;
 	            }
 	        });
 
 			$(document).on('pjax:success', function(e, data, status, xhr, options) {
-				if ($(options.target).attr('data-link') == 'panel') {
-					onPanel = true;
+				if ((options.container).attr('id') == 'pjax-modals') {
+					onModal = true;
 				}
 			});
 		});		
 	</script>
+	<style type="text/css">
+		ol li { margin: 15px 0; }
+		#pjax-pages { font-size: 64px; }
+
+		.modal {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background-color: rgba(0, 0, 0, .5);
+		}
+
+		.modal .modal-body {
+			background-color: white;
+			padding: 30px;
+			width: 50%;
+			text-align: center;
+			margin: 100px auto;
+		}
+	</style>
 </head>
 <body>
-	<div id="links">
-		<a href="/pjaxtest/page1.html" data-link="page">page1</a>
-		<a href="/pjaxtest/page2.html" data-link="page">page2</a>
-		<a href="/pjaxtest/panel.html" data-link="panel">panel</a>
+	<div>
+		Synopsis:<br>
+		$.pjax.defaults.maxCacheLength = 0; (don't want caching at all)<br>
+		Do not reload current page after a modal is closed
 	</div>
+	<br>
+	<div>
+		Open console then follow these steps to demonstrate the bug(?):
+		<br>
+		<ol>
+			<li><a href="/pjaxtest/page1.html" data-link="page">click here to load <b>PAGE1</b></a></li>
+			<li><a href="/pjaxtest/modal.html" data-link="modal">click here to load <b>MODAL</b></a></li>
+			<li><b>BACK</b> (modal closes, pjax:beforeSend cancelled)</li>
+			<li><b>FORWARD</b> (bug: url changed but no modal, no pjax:start)</li>
+			<li><b>BACK</b> (url changed)</li>
+			<li><b>FORWARD</b> (modal opens as excepted)</li>
+		</ol>
+	</div>
+	<br>
 	<div id="pjax-pages"></div>
-	<div id="pjax-panels"></div>
+	<div id="pjax-modals"></div>
 </body>
 </html>
